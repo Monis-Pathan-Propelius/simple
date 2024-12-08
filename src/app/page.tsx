@@ -1,101 +1,107 @@
-import Image from "next/image";
+"use client";
+
+import { useEffect, useState } from "react";
+
+interface userdata {
+  username: string;
+  email: string;
+}
 
 export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
+  const [data, setData] = useState<userdata[]>([]);
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+  useEffect(() => {
+    console.log(username, ",", email);
+  }, [username, email]);
+
+  const add_data = async ({
+    name,
+    email_address,
+  }: {
+    name: string;
+    email_address: string;
+  }) => {
+    try {
+      const result = await fetch("http://localhost:3001/add-user", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ username: name, email: email_address }),
+      });
+
+      const data = await result.json();
+
+      if (result.ok) {
+        console.log("User added successfully");
+      } else {
+        console.log("Error: " + data);
+      }
+    } catch (error) {
+      console.log("error", error);
+    }
+  };
+
+  const getdata = async () => {
+    try {
+      const result = await fetch("http://localhost:3001/get-user");
+      const data = await result.json();
+      setData(data);
+      console.log(data);
+    } catch (error) {
+      console.log("error", error);
+    }
+  };
+
+  return (
+    <div className="h-[100vh] w-full flex flex-col items-center align-middle justify-center ">
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          add_data({ email_address: email, name: username });
+        }}
+      >
+        <div className="grid gap-3 w-[300px]">
+          <label>Username:</label>
+          <input
+            placeholder="enter username"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+          />
+
+          <label>Email:</label>
+          <input
+            placeholder="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+          />
+
+          <button type="submit">Submit</button>
+          <button type="button" onClick={() => getdata()}>
+            Get data
+          </button>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+      </form>
+
+      {data && (
+        <div className="flex flex-col gap-2">
+          {data.map((item, index) => (
+            <div
+              key={index}
+              className="flex justify-between items-center w-full border-b pb-2"
+            >
+              <div className="w-1/2">
+                <span>Username: {item.username}</span>
+              </div>
+              <div className="w-[300px] text-right">
+                <span>Email: {item.email}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
